@@ -1,0 +1,2 @@
+library(ncaahoopR)
+game_stats <- get_boxscore(401706881)

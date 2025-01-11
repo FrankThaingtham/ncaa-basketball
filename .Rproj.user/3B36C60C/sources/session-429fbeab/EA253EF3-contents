@@ -1,0 +1,25 @@
+#load package
+library(ncaahoopR)
+
+# Define the function to get the schedule for a given team
+get_team_schedule <- function(team, season) {
+  # Retrieve schedule using the provided team and season
+  team_schedule <- get_schedule(team = team, season = season)
+  
+  # Add the point spread column
+  team_schedule <- team_schedule %>%
+    mutate(point_spread = team_score - opp_score)
+  
+  return(team_schedule)
+}
+
+teams <- c("Duke", "NC State", "UNC", "Notre Dame", "Miami", "Virginia Tech", 
+          "Cal", "Boston College", "Stanford", "SMU", "Pitt", 
+          "Clemson", "Syracuse", "Louisville", "Wake Forest", "Florida State", "Georgia Tech", "UVA")
+
+all_schedules <- list()
+
+for (team in teams) {
+  team_schedule <- get_team_schedule(team, season = "2024-25")
+  all_schedules[[team]] <- team_schedule
+}

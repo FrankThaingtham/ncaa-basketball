@@ -4,16 +4,12 @@
 #load package
 library(ncaahoopR)
 
-# look at a team's schedule
-get_schedule("Duke", "2022-23") %>%
-  glimpse()
-
 pt_df = NULL
 
 #Basic prediction
 for(teamName in c("Duke", "UNC", "NC State")) {
-  pt_df = rbind(pt_df, get_schedule(teamName, "2022-23") %>%
-                  filter(date < "2023-01-01") %>% # look at only Fall games
+  pt_df = rbind(pt_df, get_schedule(teamName, "2024-2025") %>%
+                  filter(date < "2025-01-01") %>% # look at only Fall games
                   summarize(mean_pts = mean(team_score),
                             var_pts = var(team_score)) %>%
                   mutate(team = teamName))

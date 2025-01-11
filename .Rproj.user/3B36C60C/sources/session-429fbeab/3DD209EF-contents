@@ -1,0 +1,164 @@
+#load package
+library(ncaahoopR)
+
+#get schedule and spread of each team
+duke_schedule <- get_schedule(team = "Duke", season = "2024-25")
+duke_schedule <- duke_schedule %>% 
+  mutate(point_spread = team_score - opp_score)
+
+unc_schedule <- get_schedule(team = "UNC", season = "2024-25")
+unc_schedule  <- unc_schedule %>% 
+  mutate(point_spread = team_score - opp_score)
+
+ncstate_schedule <- get_schedule(team = "NC State", season = "2024-25")
+ncstate_schedule <- ncstate_schedule %>% 
+  mutate(point_spread = team_score - opp_score)  
+
+#Remove opponent NET ranking lower than ACC lowest (213)
+#Manually did it
+#Remove date column 
+#Remove gamer after 2025-01-10
+#Remove record column 
+install.packages("writexl")
+library(writexl)
+write_xlsx(duke_schedule, "duke_schedule.xlsx")
+
+write_xlsx(unc_schedule, "unc_schedule.xlsx")
+
+write_xlsx(ncstate_schedule, "ncstate_schedule.xlsx")
+
+
+#Read the new trim down schedule 
+library(readxl)
+duke_df <- read_excel("duke_schedule.xlsx")
+unc_df <- read_excel("unc_schedule.xlsx")
+ncstate_df <- read_excel("ncstate_schedule.xlsx")
+
+# Function to get team stats for each game
+get_game_stats <- function(game_ids) {
+  # Create an empty list to store results
+  game_stats <- list()
+  
+  # Loop through each game ID
+  for(game_id in game_ids) {
+    # Get the boxscore for the game
+    boxscore <- get_boxscore(game_id)
+    
+    # Extract the team and opponent names
+    team_name <- names(boxscore)[1]  # Usually the home team
+    opponent_name <- names(boxscore)[2]  # Usually the away team
+    
+    # Extract the relevant stats for the team and the opponent
+    team_fgm <- boxscore[[team_name]][["FGM"]]
+    team_fga <- boxscore[[team_name]][["FGA"]]
+    team_3ptm <- boxscore[[team_name]][["3PTM"]]
+    team_3pta <- boxscore[[team_name]][["3PTA"]]
+    team_pts <- boxscore[[team_name]][["PTS"]]
+    team_oreb <- boxscore[[team_name]][["OREB"]]
+    team_dreb <- boxscore[[team_name]][["DREB"]]
+    team_reb <- boxscore[[team_name]][["REB"]]
+    team_ftm <- boxscore[[team_name]][["FTM"]]
+    team_fta <- boxscore[[team_name]][["FTA"]]
+    team_ast <- boxscore[[team_name]][["AST"]]
+    team_stl <- boxscore[[team_name]][["STL"]]
+    team_blk <- boxscore[[team_name]][["BLK"]]
+    team_to <- boxscore[[team_name]][["TO"]]
+    
+    opponent_fgm <- boxscore[[opponent_name]][["FGM"]]
+    opponent_fga <- boxscore[[opponent_name]][["FGA"]]
+    opponent_3ptm <- boxscore[[opponent_name]][["3PTM"]]
+    opponent_3pta <- boxscore[[opponent_name]][["3PTA"]]
+    opponent_pts <- boxscore[[opponent_name]][["PTS"]]
+    opponent_oreb <- boxscore[[opponent_name]][["OREB"]]
+    opponent_dreb <- boxscore[[opponent_name]][["DREB"]]
+    opponent_reb <- boxscore[[opponent_name]][["REB"]]
+    opponent_ftm <- boxscore[[opponent_name]][["FTM"]]
+    opponent_fta <- boxscore[[opponent_name]][["FTA"]]
+    opponent_ast <- boxscore[[opponent_name]][["AST"]]
+    opponent_stl <- boxscore[[opponent_name]][["STL"]]
+    opponent_blk <- boxscore[[opponent_name]][["BLK"]]
+    opponent_to <- boxscore[[opponent_name]][["TO"]]
+    
+    # Summarize the stats for the team and opponent
+    game_summary <- data.frame(
+      game_id = game_id,  # Put game_id as the first column
+      team_name = team_name,
+      opponent_name = opponent_name,
+      
+      # Team stats
+      team_fgm = sum(team_fgm, na.rm = TRUE),
+      team_fga = sum(team_fga, na.rm = TRUE),
+      team_3ptm = sum(team_3ptm, na.rm = TRUE),
+      team_3pta = sum(team_3pta, na.rm = TRUE),
+      team_oreb = sum(team_oreb, na.rm = TRUE),
+      team_dreb = sum(team_dreb, na.rm = TRUE),
+      team_reb = sum(team_reb, na.rm = TRUE),
+      team_ftm = sum(team_ftm, na.rm = TRUE),
+      team_fta = sum(team_fta, na.rm = TRUE),
+      team_ast = sum(team_ast, na.rm = TRUE),
+      team_stl = sum(team_stl, na.rm = TRUE),
+      team_blk = sum(team_blk, na.rm = TRUE),
+      team_to = sum(team_to, na.rm = TRUE),
+      
+      # Opponent stats
+      opponent_fgm = sum(opponent_fgm, na.rm = TRUE),
+      opponent_fga = sum(opponent_fga, na.rm = TRUE),
+      opponent_3ptm = sum(opponent_3ptm, na.rm = TRUE),
+      opponent_3pta = sum(opponent_3pta, na.rm = TRUE),
+      opponent_oreb = sum(opponent_oreb, na.rm = TRUE),
+      opponent_dreb = sum(opponent_dreb, na.rm = TRUE),
+      opponent_reb = sum(opponent_reb, na.rm = TRUE),
+      opponent_ftm = sum(opponent_ftm, na.rm = TRUE),
+      opponent_fta = sum(opponent_fta, na.rm = TRUE),
+      opponent_ast = sum(opponent_ast, na.rm = TRUE),
+      opponent_stl = sum(opponent_stl, na.rm = TRUE),
+      opponent_blk = sum(opponent_blk, na.rm = TRUE),
+      opponent_to = sum(opponent_to, na.rm = TRUE)
+    )
+    
+    # Append the game summary to the list of results
+    game_stats[[length(game_stats) + 1]] <- game_summary
+  }
+  
+  # Combine all game stats into a single data frame
+  game_stats_df <- do.call(rbind, game_stats)
+  
+  return(game_stats_df)
+}
+
+# Example usage
+duke_ids <- duke_df$game_id
+unc_ids <- unc_df$game_id
+ncstate_ids <- ncstate_df$game_id
+
+# Get the stats for all the games
+duke_all_game_stats <- get_game_stats(duke_ids)
+unc_all_game_stats <- get_game_stats(unc_ids)
+ncstate_all_game_stats <- get_game_stats(ncstate_ids)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
